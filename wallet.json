@@ -1,0 +1,16 @@
+[
+    {
+        "Id": 1,
+        "AccName": "Password_1",
+        "HashPass": "02d92c580d4ede6c80a878bdd9f3142d8f757be8",
+        "SeedEncr": {
+            "ByteArr": "8/JYVRXt1k4juOOiEnaVnGTs1Kx0tVmfbhyiAx+omliAG/4QZgIcHxOe5Obbrosk/cB4cryFGCJs9SfRCud1WA=="
+        },
+        "KeyPairList": [
+            {
+                "PrivKey": "000567b1906afc1d3b3706505c9041e7ebba6b78de0b59949580e7cc2e3191f41eccddf6e4988d57531c804d2ecd2c3839f4de58f224bee41ea06a444e00f6aa",
+                "PublKey": "03ac25fd19af51a47593432ee32cfab3d81fb7b571925e7bb7df5a9ff63d7d215c"
+            }
+        ]
+    }
+]
