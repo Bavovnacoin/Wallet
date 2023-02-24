@@ -43,8 +43,7 @@ func SHA1(message string) string {
 
 		for j := 0; j < 16; j += 1 {
 			num64, _ := strconv.ParseUint(chunk[j*32:j*32+32], 2, 32)
-			num := uint32(num64)
-			w = append(w, num)
+			w = append(w, uint32(num64))
 		}
 
 		for j := 16; j < 80; j += 1 {
@@ -66,7 +65,7 @@ func SHA1(message string) string {
 			} else if j >= 40 && j <= 59 {
 				f = (arr[1] & arr[2]) | (arr[1] & arr[3]) | (arr[2] & arr[3])
 				k = 0x8F1BBCDC
-			} else if j >= 60 && j <= 79 {
+			} else {
 				f = arr[1] ^ arr[2] ^ arr[3]
 				k = 0xCA62C1D6
 			}
@@ -87,5 +86,6 @@ func SHA1(message string) string {
 	c := addZerosTo(fmt.Sprintf("%x", sha1_h[2]), 8)
 	d := addZerosTo(fmt.Sprintf("%x", sha1_h[3]), 8)
 	e := addZerosTo(fmt.Sprintf("%x", sha1_h[4]), 8)
+
 	return a + b + c + d + e
 }

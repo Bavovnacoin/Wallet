@@ -1,7 +1,7 @@
 package hashing
 
 import (
-	"math/big"
+	"encoding/hex"
 )
 
 const (
@@ -20,24 +20,22 @@ func byteArrToStr(arr []byte) string {
 	return res
 }
 
-func HMAC_SHA1(key, message string) string {
-	keyByte := []byte(key)
-
-	if len(keyByte) > block_size {
-		keyByte = []byte(SHA1(key))
+func HMAC_SHA1(key, message []byte) string {
+	if len(key) > block_size {
+		key = []byte(SHA1(byteArrToStr(key)))
 	}
 
-	if len(keyByte) < block_size {
-		keyByte = append(keyByte, make([]byte, block_size-len(keyByte))...)
+	if len(key) < block_size {
+		key = append(key, make([]byte, block_size-len(key))...)
 	}
 
 	var ikeypad []byte
 	var okeypad []byte
-	for i := 0; i < len(keyByte); i++ {
-		ikeypad = append(ikeypad, keyByte[i]^ipad)
-		okeypad = append(okeypad, keyByte[i]^opad)
+	for i := 0; i < len(key); i++ {
+		ikeypad = append(ikeypad, key[i]^ipad)
+		okeypad = append(okeypad, key[i]^opad)
 	}
 
-	ikeypadBig, _ := new(big.Int).SetString(SHA1(string(ikeypad)+message), 16)
-	return SHA1(string(okeypad) + byteArrToStr(ikeypadBig.Bytes()))
+	b, _ := hex.DecodeString(SHA1(byteArrToStr(append(ikeypad, message...))))
+	return SHA1(byteArrToStr(append(okeypad, b...)))
 }

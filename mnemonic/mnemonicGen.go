@@ -12,6 +12,8 @@ import (
 
 const (
 	mnemLenBits = 256
+	iterC       = 256
+	seedLen     = 64
 )
 
 type Mnemonic struct {
@@ -59,4 +61,8 @@ func (mn *Mnemonic) GenMnemonicPhrase() []string {
 	}
 
 	return mnemonicPhrase
+}
+
+func (mn *Mnemonic) GenSeed(mnemonic []string, password string) []byte {
+	return hashing.PBKDF2(strings.Join(mnemonic, " "), "mnemonic"+password, iterC, seedLen)
 }
