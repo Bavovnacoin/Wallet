@@ -2,7 +2,7 @@
     {
         "Id": 1,
         "AccName": "Password_1",
-        "HashPass": "02d92c580d4ede6c80a878bdd9f3142d8f757be8",
+        "HashPass": "422d90beed049624f19195acf9429ddd13fc7932",
         "SeedEncr": {
             "ByteArr": "8/JYVRXt1k4juOOiEnaVnGTs1Kx0tVmfbhyiAx+omliAG/4QZgIcHxOe5Obbrosk/cB4cryFGCJs9SfRCud1WA=="
         },
@@ -10,6 +10,10 @@
             {
                 "PrivKey": "000567b1906afc1d3b3706505c9041e7ebba6b78de0b59949580e7cc2e3191f41eccddf6e4988d57531c804d2ecd2c3839f4de58f224bee41ea06a444e00f6aa",
                 "PublKey": "03ac25fd19af51a47593432ee32cfab3d81fb7b571925e7bb7df5a9ff63d7d215c"
+            },
+            {
+                "PrivKey": "cf5a1a10730695d9568b49bf059ecaa06a230e5222f74f2c5b9a212e02b3ad7c042337c44d1482f9f3465a978b3a03fb567d71d5960ff1168570f4767cf3fae1",
+                "PublKey": "02b0c0375c31c42a62111518a2cdf4cec059c73264da6bff35e68bdbb5250deb53"
             }
         ]
     }

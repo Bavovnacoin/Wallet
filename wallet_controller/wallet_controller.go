@@ -1,6 +1,7 @@
 package wallet_controller
 
 import (
+	"bufio"
 	"bvcwallet/account"
 	"fmt"
 	"os"
@@ -11,6 +12,7 @@ import (
 type WalletController struct {
 	walletLaunched bool
 	opSys          string
+	scann          *bufio.Scanner
 }
 
 func (wc *WalletController) ClearConsole() {
@@ -28,15 +30,23 @@ func (wc *WalletController) ClearConsole() {
 }
 
 func (wc *WalletController) Launch() {
+	wc.walletLaunched = true
 	wc.opSys = runtime.GOOS
+	wc.scann = bufio.NewScanner(os.Stdin)
 
-	if !account.IsWalletExists() {
-		wc.ClearConsole()
-		println("Can't find any account on you'r PC. Create one") //TODO: or enter a mnemonic phrase
-		wc.CreateAccount()
-	}
-
+	allowLaunchMenu := false
 	for wc.walletLaunched {
-		return
+		if !account.IsWalletExists() {
+			wc.ClearConsole()
+			println("Can't find any account on you'r PC. Create one") //TODO: or enter a mnemonic phrase
+			wc.CreateAccount()
+			allowLaunchMenu = true
+		} else {
+			allowLaunchMenu = wc.initAccount()
+		}
+
+		if allowLaunchMenu {
+			wc.GetMenu()
+		}
 	}
 }

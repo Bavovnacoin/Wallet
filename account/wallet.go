@@ -12,6 +12,8 @@ package account
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"os"
 )
 
@@ -34,4 +36,17 @@ func IsWalletExists() bool {
 func WriteAccounts() {
 	byteData, _ := json.MarshalIndent(Wallet, "", "    ")
 	os.WriteFile(WalletName, byteData, 0777)
+}
+
+func GetWalletData() {
+	jsonFile, err := os.Open(WalletName)
+	// if we os.Open returns an error then handle it
+	if err != nil {
+		fmt.Println(err)
+	}
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	json.Unmarshal(byteValue, &Wallet)
+	jsonFile.Close()
+
 }

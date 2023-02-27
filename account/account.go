@@ -53,6 +53,7 @@ func AddKeyPairToAccount(password string) string {
 		newKeyPair.PrivKey = cryption.AES_encrypt(newKeyPair.PrivKey, password)
 		CurrAccount.KeyPairList = append(CurrAccount.KeyPairList, newKeyPair)
 		Wallet[CurrAccount.ArrId] = CurrAccount
+		WriteAccounts()
 	} else {
 		return "Wrong password!"
 	}
@@ -112,24 +113,9 @@ func PrintBalance() {
 	fmt.Printf("Balance: %.8f BVC\n", bal)
 }
 
-func getAccountInd(accountId int) int {
-	for i := 0; i < len(Wallet); i++ {
-		if Wallet[i].Id == accountId {
-			Wallet[i].ArrId = i
-			return i
-		}
-	}
-	return -1
-}
-
-func InitAccount(accountId int) bool {
-	ecdsa.InitValues()
-	accInd := getAccountInd(accountId)
-	if accInd != -1 {
-		CurrAccount = Wallet[accInd]
-		return true
-	}
-	return false
+func InitAccount(accountId int) {
+	CurrAccount = Wallet[accountId]
+	GetBalance()
 }
 
 func SignData(hashMes string, kpInd int, pass string) (string, bool) {
