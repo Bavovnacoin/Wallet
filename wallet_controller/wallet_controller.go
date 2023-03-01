@@ -29,6 +29,16 @@ func (wc *WalletController) ClearConsole() {
 	}
 }
 
+func (wc *WalletController) getLineSeparator() string {
+	if wc.opSys == "windows" {
+		return "\r\n"
+	} else if wc.opSys == "darwin" {
+		return "\r"
+	} else {
+		return "\n"
+	}
+}
+
 func (wc *WalletController) Launch() {
 	wc.walletLaunched = true
 	wc.opSys = runtime.GOOS
