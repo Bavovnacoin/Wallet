@@ -5,6 +5,7 @@ import (
 	"bvcwallet/account"
 	"bvcwallet/byteArr"
 	"bvcwallet/hashing"
+	"bvcwallet/networking"
 	"bvcwallet/transaction"
 	"fmt"
 	"os"
@@ -172,6 +173,10 @@ func (wc *WalletController) handleInput(input string) {
 		println("Thank you for using our wallet. See you!")
 		wc.walletLaunched = false
 		menuLaunched = false
+	} else if input == "5" { // Ping-pong
+		var conn networking.Connection
+		conn.EstablishConnection()
+		go conn.PingPong()
 	}
 }
 
@@ -186,6 +191,7 @@ func (wc *WalletController) GetMenu() {
 		println("2. Create new address")
 		println("3. Choose the other account")
 		println("4. Exit")
+		println("5. Ping-pong test")
 
 		println("Type in a number, to select a function.")
 		if wrongInput {
