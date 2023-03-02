@@ -6,7 +6,6 @@ import (
 	"bvcwallet/ecdsa"
 	"bvcwallet/hashing"
 
-	"bvcwallet/networking"
 	"fmt"
 	"sort"
 )
@@ -60,14 +59,14 @@ func AddKeyPairToAccount(password string) string {
 	return ""
 }
 
-func GetAccUtxo() []networking.TXO {
-	var accUtxo []networking.TXO
+func GetAccUtxo() []UTXO {
+	var accUtxo []UTXO
 	for i := 0; i < len(CurrAccount.KeyPairList); i++ {
-		for j := 0; j < len(networking.CoinDatabase); j++ {
+		for j := 0; j < len(CurrAccCoinDatabase); j++ {
 			var currAccAddr byteArr.ByteArr
 			currAccAddr.SetFromHexString(hashing.SHA1(CurrAccount.KeyPairList[i].PublKey), 20)
-			if networking.CoinDatabase[j].OutAddress.IsEqual(currAccAddr) {
-				accUtxo = append(accUtxo, networking.CoinDatabase[j])
+			if CurrAccCoinDatabase[j].OutAddress.IsEqual(currAccAddr) {
+				accUtxo = append(accUtxo, CurrAccCoinDatabase[j])
 			}
 		}
 	}
@@ -78,9 +77,9 @@ func GetAccUtxo() []networking.TXO {
 }
 
 func GetBalHashOutInd(txHash byteArr.ByteArr, outInd int) uint64 {
-	for j := 0; j < len(networking.CoinDatabase); j++ {
-		if txHash.IsEqual(networking.CoinDatabase[j].OutTxHash) && networking.CoinDatabase[j].TxOutInd == uint64(outInd) {
-			return networking.CoinDatabase[j].Value
+	for j := 0; j < len(CurrAccCoinDatabase); j++ {
+		if txHash.IsEqual(CurrAccCoinDatabase[j].OutTxHash) && CurrAccCoinDatabase[j].TxOutInd == uint64(outInd) {
+			return CurrAccCoinDatabase[j].Value
 		}
 	}
 	return 0
@@ -88,9 +87,9 @@ func GetBalHashOutInd(txHash byteArr.ByteArr, outInd int) uint64 {
 
 func GetBalByAddress(address byteArr.ByteArr) uint64 {
 	var Value uint64
-	for i := 0; i < len(networking.CoinDatabase); i++ {
-		if address.IsEqual(networking.CoinDatabase[i].OutAddress) {
-			Value += networking.CoinDatabase[i].Value
+	for i := 0; i < len(CurrAccCoinDatabase); i++ {
+		if address.IsEqual(CurrAccCoinDatabase[i].OutAddress) {
+			Value += CurrAccCoinDatabase[i].Value
 		}
 	}
 	return Value
@@ -131,4 +130,14 @@ func SignData(hashMes string, kpInd int, pass string) (string, bool) {
 func VerifData(hashMes string, kpInd int, signature string) bool {
 	kp := CurrAccount.KeyPairList[kpInd]
 	return ecdsa.Verify(kp.PublKey, signature, hashMes)
+}
+
+func GetAccAddresses() []byteArr.ByteArr {
+	var addresses []byteArr.ByteArr
+	for i := 0; i < len(CurrAccount.KeyPairList); i++ {
+		var currAddr byteArr.ByteArr
+		currAddr.SetFromHexString(hashing.SHA1(CurrAccount.KeyPairList[i].PublKey), 20)
+		addresses = append(addresses, currAddr)
+	}
+	return addresses
 }

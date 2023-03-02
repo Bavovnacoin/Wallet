@@ -155,10 +155,35 @@ func (wc *WalletController) createTransaction() (transaction.Transaction, bool) 
 	return tx, true
 }
 
+// TODO: remove
+func PingPong() {
+	var connection networking.Connection
+	connection.Establish()
+	connection.PingPong()
+	connection.Close()
+}
+
+func UpdateBalance(res *bool) {
+	var connection networking.Connection
+	isEstablished := connection.Establish()
+	//println(isEstablished)
+	if isEstablished {
+		*res = connection.GetMyUtxo(account.GetAccAddresses())
+		println("INFO: Balance updated")
+		connection.Close()
+	}
+}
+
 // TODO: add view addresses??
 func (wc *WalletController) handleInput(input string) {
 	if input == "0" { // Update balance
-
+		var res bool = true
+		go UpdateBalance(&res)
+		if res {
+			wc.menuMessage = "Updating your balance, it may take some time..."
+		} else {
+			wc.menuMessage = "An error occured when updating your balance. Try again later"
+		}
 	} else if input == "1" { // Create transaction
 		_, res := wc.createTransaction()
 		if res {
@@ -174,9 +199,7 @@ func (wc *WalletController) handleInput(input string) {
 		wc.walletLaunched = false
 		menuLaunched = false
 	} else if input == "5" { // Ping-pong
-		var conn networking.Connection
-		conn.EstablishConnection()
-		go conn.PingPong()
+		go PingPong()
 	}
 }
 
@@ -184,7 +207,12 @@ func (wc *WalletController) GetMenu() {
 	menuLaunched = true
 	wrongInput := false
 	for menuLaunched {
-		wc.ClearConsole()
+		//wc.ClearConsole()
+		if wc.menuMessage != "" {
+			println(wc.menuMessage)
+			wc.menuMessage = ""
+		}
+
 		fmt.Printf("You balance: %d BVC.\n", account.CurrAccount.Balance/100000000)
 		println("0. Update balance")
 		println("1. Send coins")

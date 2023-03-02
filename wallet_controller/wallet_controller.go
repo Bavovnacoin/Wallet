@@ -13,6 +13,8 @@ type WalletController struct {
 	walletLaunched bool
 	opSys          string
 	scann          *bufio.Scanner
+
+	menuMessage string
 }
 
 func (wc *WalletController) ClearConsole() {

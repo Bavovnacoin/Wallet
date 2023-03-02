@@ -6,7 +6,6 @@ import (
 	"bvcwallet/cryption"
 	"bvcwallet/ecdsa"
 	"bvcwallet/hashing"
-	"bvcwallet/networking"
 	"fmt"
 )
 
@@ -87,12 +86,12 @@ that is higher or equal to the required sum (minus sum that we have already foun
 If a right neighbor is less than needed sum, we keep iterating, because there is a chance
 of finding better variant.
 */
-func GetTransInputs(value uint64, accUtxo []networking.TXO) ([]UtxoForInput, []networking.TXO, uint64) {
+func GetTransInputs(value uint64, accUtxo []account.UTXO) ([]UtxoForInput, []account.UTXO, uint64) {
 	if accUtxo == nil {
 		accUtxo = account.GetAccUtxo()
 	}
 
-	accUtxo = append(accUtxo, networking.TXO{}) // Stub value for searching
+	accUtxo = append(accUtxo, account.UTXO{}) // Stub value for searching
 	var utxoInput []UtxoForInput
 	tempValue := uint64(0)
 

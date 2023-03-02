@@ -1,8 +1,8 @@
-package networking
+package account
 
 import "bvcwallet/byteArr"
 
-type TXO struct {
+type UTXO struct {
 	OutTxHash   byteArr.ByteArr
 	TxOutInd    uint64
 	Value       uint64
@@ -10,4 +10,4 @@ type TXO struct {
 	BlockHeight uint64
 }
 
-var CoinDatabase []TXO
+var CurrAccCoinDatabase []UTXO
