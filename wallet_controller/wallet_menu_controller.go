@@ -144,11 +144,15 @@ func (wc *WalletController) createTransaction() (transaction.Transaction, bool) 
 		}
 
 		var res bool
-		for !transaction.VerifyTransaction(tx) {
+		for isTxCorrect := false; !isTxCorrect; {
 			tx, res = transaction.CreateTransaction(password, outAddr, outValue, fee, uint(locktime))
 			if !res {
 				incorrectAmmount = true
 				break
+			}
+			isTxCorrect = transaction.VerifyTransaction(tx)
+			if isTxCorrect {
+				return tx, true
 			}
 		}
 	}
@@ -163,13 +167,30 @@ func PingPong() {
 	connection.Close()
 }
 
+func SendTransaction(tx transaction.Transaction, isSent *bool) {
+	var connection networking.Connection
+	isEstablished := connection.Establish()
+
+	if isEstablished {
+		var isAccepted bool = false
+		*isSent = connection.SendTransaction(tx, &isAccepted)
+		if isAccepted {
+			println("INFO: Transaction is accepted by the node")
+		} else {
+			println("INFO: An error occured when the node was trying to accept your transaction. Try again later.")
+		}
+		connection.Close()
+	}
+}
+
 func UpdateBalance(res *bool) {
 	var connection networking.Connection
 	isEstablished := connection.Establish()
-	//println(isEstablished)
+
 	if isEstablished {
 		*res = connection.GetMyUtxo(account.GetAccAddresses())
-		println("INFO: Balance updated")
+		account.GetBalance()
+		println("INFO: Balance updated. Press any button to refresh it.")
 		connection.Close()
 	}
 }
@@ -185,9 +206,17 @@ func (wc *WalletController) handleInput(input string) {
 			wc.menuMessage = "An error occured when updating your balance. Try again later"
 		}
 	} else if input == "1" { // Create transaction
-		_, res := wc.createTransaction()
-		if res {
-			// wc.sendTransaction(newTx)??
+		newTx, isCreated := wc.createTransaction()
+		if isCreated {
+			var isSent bool
+			go SendTransaction(newTx, &isSent)
+			if isSent {
+				wc.menuMessage = "Your transaction is sent to the node."
+			} else {
+				wc.menuMessage = "An error occured when sending your transaction. Try again later"
+			}
+		} else {
+			wc.menuMessage = "An error occured when creating your transaction. Try again later"
 		}
 	} else if input == "2" { // Create new address
 		wc.createNewAddress()
@@ -207,13 +236,13 @@ func (wc *WalletController) GetMenu() {
 	menuLaunched = true
 	wrongInput := false
 	for menuLaunched {
-		//wc.ClearConsole()
+		wc.ClearConsole()
 		if wc.menuMessage != "" {
 			println(wc.menuMessage)
 			wc.menuMessage = ""
 		}
 
-		fmt.Printf("You balance: %d BVC.\n", account.CurrAccount.Balance/100000000)
+		fmt.Printf("You balance: %0.8f BVC.\n", float64(account.CurrAccount.Balance)/float64(100000000))
 		println("0. Update balance")
 		println("1. Send coins")
 		println("2. Create new address")

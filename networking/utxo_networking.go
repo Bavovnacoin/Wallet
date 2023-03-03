@@ -19,10 +19,8 @@ func (c *Connection) GetMyUtxo(addresses []byteArr.ByteArr) bool {
 		return false
 	}
 
-	c.FromByteArr(repl.Data, &account.CurrAccCoinDatabase) //TODO: problem here (wrong byte array -> struct array conversion)!
-	for i := 0; i < len(account.CurrAccCoinDatabase); i++ {
-		println(account.CurrAccCoinDatabase[i].Value)
-	}
+	c.FromByteArr(repl.Data, &account.CurrAccCoinDatabase)
+
 	return true
 
 }

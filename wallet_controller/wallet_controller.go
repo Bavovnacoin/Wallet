@@ -3,6 +3,7 @@ package wallet_controller
 import (
 	"bufio"
 	"bvcwallet/account"
+	"bvcwallet/networking"
 	"fmt"
 	"os"
 	"os/exec"
@@ -55,6 +56,18 @@ func (wc *WalletController) Launch() {
 			allowLaunchMenu = true
 		} else {
 			allowLaunchMenu = wc.initAccount()
+
+			var connection networking.Connection
+			isEstablished := connection.Establish()
+
+			if isEstablished {
+				connection.GetMyUtxo(account.GetAccAddresses())
+				account.GetBalance()
+				connection.Close()
+			} else {
+				println("Can't connect to any Bavovnacoin node. Please, try again later")
+				return
+			}
 		}
 
 		if allowLaunchMenu {

@@ -260,6 +260,7 @@ func VerifyTransaction(tx Transaction) bool {
 			sign := tx.Inputs[i].ScriptSig.GetSignature().ToHexString()
 
 			if !ecdsa.Verify(pubKey, sign, hashMesOfTx) {
+				println(3)
 				return false
 			}
 
@@ -273,7 +274,6 @@ func VerifyTransaction(tx Transaction) bool {
 
 		// Checking presence of coins to be spent
 		if inpValue < outValue {
-			println(inpValue, outValue)
 			return false
 		}
 	}
