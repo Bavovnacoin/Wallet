@@ -164,14 +164,6 @@ func (wc *WalletController) createTransaction() (transaction.Transaction, bool) 
 	return tx, false
 }
 
-// TODO: remove
-func PingPong() {
-	var connection networking.Connection
-	connection.Establish()
-	connection.PingPong()
-	connection.Close()
-}
-
 func SendTransaction(tx transaction.Transaction, isSent *bool) {
 	var connection networking.Connection
 	isEstablished := connection.Establish()
@@ -197,6 +189,24 @@ func UpdateBalance(res *bool) {
 		account.GetBalance()
 		println("INFO: Balance updated. Press any button to refresh it.")
 		connection.Close()
+	}
+}
+
+func (wc *WalletController) ShowMyAddresses() {
+	for true {
+		wc.ClearConsole()
+		println("Type \"back\" to back to the main menu.")
+		fmt.Printf("You have %d addresses on your account\n", len(account.CurrAccount.KeyPairList))
+
+		for _, kp := range account.CurrAccount.KeyPairList {
+			println(hashing.SHA1(kp.PublKey))
+		}
+
+		wc.scann.Scan()
+		command := wc.scann.Text()
+		if command == "back" {
+			return
+		}
 	}
 }
 
@@ -226,15 +236,15 @@ func (wc *WalletController) handleInput(input string) {
 		}
 	} else if input == "2" { // Create new address
 		wc.createNewAddress()
-	} else if input == "3" { // Choose other account
+	} else if input == "3" { // Show my addresses
+		wc.ShowMyAddresses()
+	} else if input == "4" { // Choose other account
 		menuLaunched = false
-	} else if input == "4" { // Exit
+	} else if input == "5" { // Exit
 		wc.ClearConsole()
 		println("Thank you for using our wallet. See you!")
 		wc.walletLaunched = false
 		menuLaunched = false
-	} else if input == "5" { // Ping-pong
-		go PingPong()
 	}
 }
 
@@ -252,9 +262,9 @@ func (wc *WalletController) GetMenu() {
 		println("0. Update balance")
 		println("1. Send coins")
 		println("2. Create new address")
-		println("3. Choose the other account")
-		println("4. Exit")
-		println("5. Ping-pong test")
+		println("3. Show my addresses")
+		println("4. Choose the other account")
+		println("5. Exit")
 
 		println("Type in a number, to select a function.")
 		if wrongInput {
