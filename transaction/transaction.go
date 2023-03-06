@@ -184,7 +184,7 @@ func CreateTransaction(passKey string, outAdr []byteArr.ByteArr, outVals []uint6
 
 	//Generating change output
 	if outTxValue > genValue+uint64(txSize)*uint64(feePerByte) {
-		account.AddKeyPairToAccount(passKey) // generate new keypair for the change
+		account.AddKeyPairToAccount(passKey, false) // generate new keypair for the change
 		kpLen := len(account.CurrAccount.KeyPairList)
 		tx.Outputs = append(tx.Outputs, Output{Value: uint64(outTxValue - (genValue + uint64(txSize)*uint64(feePerByte)))})
 		tx.Outputs[len(tx.Outputs)-1].Address.SetFromHexString(hashing.SHA1(account.CurrAccount.KeyPairList[kpLen-1].PublKey), 20)

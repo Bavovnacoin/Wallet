@@ -30,7 +30,7 @@ func (wc *WalletController) createNewAddress() {
 		command := wc.scann.Text()
 		if hashing.SHA1(command) == account.CurrAccount.HashPass {
 			wc.ClearConsole()
-			account.AddKeyPairToAccount(command)
+			account.AddKeyPairToAccount(command, true)
 			fmt.Printf("New address created: %s\n",
 				hashing.SHA1(account.CurrAccount.KeyPairList[len(account.CurrAccount.KeyPairList)-1].PublKey))
 
@@ -78,10 +78,11 @@ func (wc *WalletController) createTransaction() (transaction.Transaction, bool) 
 			isInpCorrect := inpAddr.SetFromHexString(inputArr[0], 20)
 			if !isInpCorrect || len(inputArr[0]) != 40 {
 				println("You have typed wrong address")
-			} else if len(inputArr) == 2 {
+			} else if len(inputArr) == 2 && len(inputArr[0]) == 40 {
 				value, err := strconv.ParseUint(inputArr[1], 10, 64)
 				if err == nil {
 					outValue = append(outValue, value)
+					outAddr = append(outAddr, inpAddr)
 				} else {
 					println("You have typed wrong coins ammount")
 				}
@@ -152,11 +153,15 @@ func (wc *WalletController) createTransaction() (transaction.Transaction, bool) 
 			}
 			isTxCorrect = transaction.VerifyTransaction(tx)
 			if isTxCorrect {
+				account.WriteAccounts()
 				return tx, true
+			} else { // Remove last keypair if tx is incorrect
+				kpLen := len(account.CurrAccount.KeyPairList)
+				account.CurrAccount.KeyPairList = append(account.CurrAccount.KeyPairList, account.CurrAccount.KeyPairList[:kpLen-1]...)
 			}
 		}
 	}
-	return tx, true
+	return tx, false
 }
 
 // TODO: remove
@@ -207,6 +212,7 @@ func (wc *WalletController) handleInput(input string) {
 		}
 	} else if input == "1" { // Create transaction
 		newTx, isCreated := wc.createTransaction()
+
 		if isCreated {
 			var isSent bool
 			go SendTransaction(newTx, &isSent)

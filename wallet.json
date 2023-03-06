@@ -14,14 +14,6 @@
             {
                 "PrivKey": "ae77cb7f4b3629f2de411b23fee0277b9537cacf7dbd87b4547364c2bf2aa7db2c4e81ab906d562920a6c901acf2b9d9c624d71158207713dcac71c466a92d3c",
                 "PublKey": "03c2b32d8a1d85c679785aa2c57379419e05943e1c2758f1ab7d3024637d4be2a8"
-            },
-            {
-                "PrivKey": "8b2d9947d15a4a25ca2e5062d7245b017b1f029ec29a19b7bfe73e57baa91636de2fc5675c4b332184925bdc08e483fa31ccc16e2e3476114641aaf91d667020",
-                "PublKey": "03a4e272ceaeb80d2b53f255b1c832ae3debc68e243d4c19c660825d92217062c7"
-            },
-            {
-                "PrivKey": "a3d10a382a3c70ff9e2aad4405aece47734d355cb3c53955b49539bd2b1b41614f3a7a7b6850f836a35ebfa53e24b9f339e1a3e9bd9faf42f8d0c3af85b2cac1",
-                "PublKey": "03c3beff25dd5b801b6ea7d627ddeb5f436a6ae87d0f6bd07393c5def870f96b39"
             }
         ]
     }

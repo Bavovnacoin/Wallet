@@ -45,14 +45,17 @@ func GenAccount(password string, accName string, seed string) Account {
 	return newAcc
 }
 
-func AddKeyPairToAccount(password string) string {
+func AddKeyPairToAccount(password string, allowWrite bool) string {
 	if CurrAccount.HashPass == hashing.SHA1(password) {
 		ecdsa.InitValues()
 		newKeyPair := ecdsa.GenKeyPair()
 		newKeyPair.PrivKey = cryption.AES_encrypt(newKeyPair.PrivKey, password)
 		CurrAccount.KeyPairList = append(CurrAccount.KeyPairList, newKeyPair)
 		Wallet[CurrAccount.ArrId] = CurrAccount
-		WriteAccounts()
+
+		if allowWrite {
+			WriteAccounts()
+		}
 	} else {
 		return "Wrong password!"
 	}
