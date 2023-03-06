@@ -18,6 +18,8 @@ type WalletController struct {
 	menuMessage string
 }
 
+var allowLaunchMenu bool = false
+
 func (wc *WalletController) ClearConsole() {
 	if wc.opSys == "windows" {
 		cmd := exec.Command("cmd", "/c", "cls")
@@ -42,18 +44,33 @@ func (wc *WalletController) getLineSeparator() string {
 	}
 }
 
+func (wc *WalletController) WalletNotExistKeyHandler() {
+	for true {
+		wc.ClearConsole()
+		println("Can't find any account on you'r PC")
+		println("0. Create a new one")
+		println("1. Enter a mnemonic phrase")
+		wc.scann.Scan()
+		input := wc.scann.Text()
+
+		if input == "0" {
+			allowLaunchMenu = wc.CreateAccount()
+			return
+		} else if input == "1" {
+			allowLaunchMenu = wc.EnterMnemonic()
+			return
+		}
+	}
+}
+
 func (wc *WalletController) Launch() {
 	wc.walletLaunched = true
 	wc.opSys = runtime.GOOS
 	wc.scann = bufio.NewScanner(os.Stdin)
 
-	allowLaunchMenu := false
 	for wc.walletLaunched {
 		if !account.IsWalletExists() {
-			wc.ClearConsole()
-			println("Can't find any account on you'r PC. Create one") //TODO: or enter a mnemonic phrase
-			wc.CreateAccount()
-			allowLaunchMenu = true
+			wc.WalletNotExistKeyHandler()
 		} else {
 			allowLaunchMenu = wc.initAccount()
 

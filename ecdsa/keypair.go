@@ -1,11 +1,11 @@
 package ecdsa
 
 import (
+	"bvcwallet/byteArr"
+	"bvcwallet/hashing"
 	"fmt"
 	"math/big"
-	"math/rand"
 	"strings"
-	"time"
 )
 
 func bigToHex(num *big.Int) string {
@@ -17,11 +17,8 @@ func hexToBig(hex string) (*big.Int, bool) {
 	return val, err
 }
 
-func GenPrivKey() string {
-	s := rand.NewSource(time.Now().UnixNano())
-	r := rand.New(s)
-	rrr := big.NewInt(1).Rand(r, n)
-	return bigToHex(rrr)
+func GenPrivKey(seed byteArr.ByteArr, kpInd int) string {
+	return hashing.SHA1(fmt.Sprintf("%s", seed.ByteArr) + fmt.Sprint(kpInd))
 }
 
 func PrivKeyToString(key *big.Int) string {
@@ -196,9 +193,9 @@ func GenPubKey(privK string) string {
 	return compressPubKey(p)
 }
 
-func GenKeyPair() KeyPair {
+func GenKeyPair(seed byteArr.ByteArr, kpInd int) KeyPair {
 	var kp KeyPair
-	kp.PrivKey = GenPrivKey()
+	kp.PrivKey = GenPrivKey(seed, kpInd)
 	kp.PublKey = GenPubKey(kp.PrivKey)
 	return kp
 }

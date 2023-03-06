@@ -2,6 +2,8 @@ package wallet_controller
 
 import (
 	"bvcwallet/account"
+	"bvcwallet/byteArr"
+	"bvcwallet/ecdsa"
 	"bvcwallet/hashing"
 	"bvcwallet/mnemonic"
 	"fmt"
@@ -37,10 +39,11 @@ func (wc *WalletController) fieldEnterer(enterText string, errorText string, val
 	println("Type \"back\" to back to the menu.")
 	println(enterText)
 	enterValue := ""
+	validErrText := ""
 	for true {
-		if enterValue != "" {
-			println(errorText)
-			println(enterValue)
+		if validErrText != "" {
+			println(validErrText)
+			validErrText = ""
 		}
 
 		wc.scann.Scan()
@@ -50,8 +53,11 @@ func (wc *WalletController) fieldEnterer(enterText string, errorText string, val
 			allowExit = true
 			return ""
 		}
+
 		if validation(enterValue) {
 			break
+		} else {
+			validErrText = errorText
 		}
 	}
 	return enterValue
@@ -65,17 +71,18 @@ func byteArrToString(arr []byte) string {
 	return res
 }
 
-func (wc *WalletController) CreateAccount() {
-	accountName := wc.fieldEnterer("Enter account name", "Account name length must be in range from 4 to 25 symbols.", isAccNameValid)
+func (wc *WalletController) CreateAccount() bool {
+	wc.ClearConsole()
+	accountName := wc.fieldEnterer("Enter an account name", "Account name length must be in range from 4 to 25 symbols.", isAccNameValid)
 	if allowExit {
 		allowExit = false
-		return
+		return false
 	}
 
 	wc.ClearConsole()
-	accountPass := wc.fieldEnterer("Enter account password", fmt.Sprintf("Account password length must be in range from 8 to 20 symbols. It should contain upper and lower case letters, numbers and special signs (%s).\n", specSign), isAccPassValid)
+	accountPass := wc.fieldEnterer("Enter an account password", fmt.Sprintf("Account password length must be in range from 8 to 20 symbols. It should contain upper and lower case letters, numbers and special signs (%s).\n", specSign), isAccPassValid)
 	if allowExit {
-		return
+		return false
 	}
 
 	var mn mnemonic.Mnemonic
@@ -101,6 +108,7 @@ func (wc *WalletController) CreateAccount() {
 	println("Account successfully created.")
 	println("To continue enter any word.")
 	fmt.Scan(&command)
+	return true
 }
 
 func (wc *WalletController) validateUser(accId int) bool {
@@ -163,4 +171,83 @@ func (wc *WalletController) initAccount() bool {
 		}
 	}
 	return false
+}
+
+func isMnemPhraseValid(phrase string) bool {
+	phraseArr := strings.Split(phrase, " ")
+	if len(phraseArr) != 24 {
+		return false
+	}
+	return true
+}
+
+func stubNetwCheck(kp ecdsa.KeyPair) bool {
+	return false
+}
+
+// Checking an existing keys in the network
+func getExistingKeyPairs(seed byteArr.ByteArr, keysCheckAmmount int) []ecdsa.KeyPair {
+	var existingKeys []ecdsa.KeyPair
+	kpInd := 0
+
+	for true {
+		var currKPs []ecdsa.KeyPair
+		for ; kpInd < keysCheckAmmount; kpInd += 1 {
+			currKPs = append(currKPs, ecdsa.GenKeyPair(seed, kpInd))
+		}
+
+		l := 0
+		r := keysCheckAmmount - 1
+		mid := 0
+		for true {
+			mid = (r + l) / 2
+			checkRes := stubNetwCheck(currKPs[mid])
+
+			if checkRes && l <= r {
+				break
+			}
+
+			if checkRes { // TODO: change to network communication
+				l = mid + 1
+			} else if !checkRes {
+				r = mid - 1
+			}
+		}
+		// TODO: binary search, networking
+	}
+	return existingKeys
+}
+
+func (wc *WalletController) EnterMnemonic() bool {
+	wc.ClearConsole()
+	phraseArr := strings.Split(wc.fieldEnterer("Enter a mnemonic phrase", "Mnemonic phrase must be 24 words long.", isMnemPhraseValid), " ")
+	if allowExit {
+		allowExit = false
+		return false
+	}
+
+	println()
+	accountName := wc.fieldEnterer("Enter a new account name", "Account name length must be in range from 4 to 25 symbols.", isAccNameValid)
+	if allowExit {
+		allowExit = false
+		return false
+	}
+
+	println()
+	password := wc.fieldEnterer("Please, enter a new password.", "Error: password type is not correct.", isAccPassValid)
+	if allowExit {
+		allowExit = false
+		return false
+	}
+
+	println(fmt.Sprint(phraseArr))
+	println(accountName)
+	println(password)
+
+	var mnem mnemonic.Mnemonic
+	seed := byteArr.ByteArr{mnem.GenSeed(phraseArr, password)}
+	println(seed.ToString())
+	newAcc := account.GenAccount(password, accountName, seed.ToString())
+	newAcc.KeyPairList = getExistingKeyPairs(seed, 10)
+	return true
 }

@@ -36,6 +36,14 @@ func (byteArr ByteArr) ToHexString() string {
 	return res
 }
 
+func (byteArr ByteArr) ToString() string {
+	res := ""
+	for _, b := range byteArr.ByteArr {
+		res += string(b)
+	}
+	return res
+}
+
 func (arr ByteArr) IsEqual(newByteArr ByteArr) bool {
 	for i := 0; i < len(newByteArr.ByteArr); i++ {
 		if arr.ByteArr[i] != newByteArr.ByteArr[i] {

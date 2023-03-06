@@ -30,25 +30,24 @@ func GenAccount(password string, accName string, seed string) Account {
 	newAcc.AccName = accName
 	newAcc.HashPass = hashing.SHA1(password)
 
-	newKeyPair := ecdsa.GenKeyPair()
+	seedEncrString := cryption.AES_encrypt(seed, password)
+	var seedEncr byteArr.ByteArr
+	seedEncr.SetFromHexString(seedEncrString, len(seedEncrString)/2)
+	newAcc.SeedEncr = seedEncr
+
+	newKeyPair := ecdsa.GenKeyPair(newAcc.SeedEncr, 0)
 	newKeyPair.PrivKey = cryption.AES_encrypt(newKeyPair.PrivKey, password)
+	newAcc.KeyPairList = append(newAcc.KeyPairList, newKeyPair)
 
 	newAcc.Id = RightBoundAccNum + 1
 	RightBoundAccNum++
-	newAcc.KeyPairList = append(newAcc.KeyPairList, newKeyPair)
-
-	seedEncrString := cryption.AES_encrypt(seed, password)
-	var seedEncr byteArr.ByteArr
-	seedEncr.SetFromHexString(seedEncrString, len(cryption.AES_encrypt(seed, password))/2) //
-	newAcc.SeedEncr = seedEncr
-
 	return newAcc
 }
 
 func AddKeyPairToAccount(password string, allowWrite bool) string {
 	if CurrAccount.HashPass == hashing.SHA1(password) {
 		ecdsa.InitValues()
-		newKeyPair := ecdsa.GenKeyPair()
+		newKeyPair := ecdsa.GenKeyPair(CurrAccount.SeedEncr, len(CurrAccount.KeyPairList))
 		newKeyPair.PrivKey = cryption.AES_encrypt(newKeyPair.PrivKey, password)
 		CurrAccount.KeyPairList = append(CurrAccount.KeyPairList, newKeyPair)
 		Wallet[CurrAccount.ArrId] = CurrAccount
