@@ -6,6 +6,7 @@ import (
 	"bvcwallet/ecdsa"
 	"bvcwallet/hashing"
 	"bvcwallet/mnemonic"
+	"bvcwallet/networking"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -181,8 +182,37 @@ func isMnemPhraseValid(phrase string) bool {
 	return true
 }
 
-func stubNetwCheck(kp ecdsa.KeyPair) bool {
-	return false
+// Binary search for checking existing keys
+func checkExistingKeyPairs(kps []ecdsa.KeyPair) int {
+	l := 0
+	r := len(kps) - 1
+	mid := 0
+
+	var con networking.Connection
+	con.Establish()
+	defer con.Close()
+
+	if con.IsAddrExist(hashing.SHA1(kps[r].PublKey)) {
+		return r
+	}
+
+	for true {
+		mid = (r + l) / 2
+		checkRes := con.IsAddrExist(hashing.SHA1(kps[mid].PublKey))
+
+		if checkRes && l >= r {
+			return mid
+		} else if !checkRes && l >= r {
+			return mid - 1
+		}
+
+		if checkRes {
+			l = mid + 1
+		} else if !checkRes {
+			r = mid - 1
+		}
+	}
+	return -1
 }
 
 // Checking an existing keys in the network
@@ -196,24 +226,15 @@ func getExistingKeyPairs(seed byteArr.ByteArr, keysCheckAmmount int) []ecdsa.Key
 			currKPs = append(currKPs, ecdsa.GenKeyPair(seed, kpInd))
 		}
 
-		l := 0
-		r := keysCheckAmmount - 1
-		mid := 0
-		for true {
-			mid = (r + l) / 2
-			checkRes := stubNetwCheck(currKPs[mid])
-
-			if checkRes && l <= r {
-				break
-			}
-
-			if checkRes { // TODO: change to network communication
-				l = mid + 1
-			} else if !checkRes {
-				r = mid - 1
-			}
+		currKPsInd := checkExistingKeyPairs(currKPs)
+		if currKPsInd < 0 {
+			break
+		} else if currKPsInd == len(currKPs)-1 {
+			existingKeys = append(existingKeys, currKPs...)
+		} else {
+			existingKeys = append(existingKeys, currKPs[:currKPsInd]...)
+			break
 		}
-		// TODO: binary search, networking
 	}
 	return existingKeys
 }
@@ -245,7 +266,7 @@ func (wc *WalletController) EnterMnemonic() bool {
 	println(password)
 
 	var mnem mnemonic.Mnemonic
-	seed := byteArr.ByteArr{mnem.GenSeed(phraseArr, password)}
+	seed := byteArr.ByteArr{ByteArr: mnem.GenSeed(phraseArr, password)}
 	println(seed.ToString())
 	newAcc := account.GenAccount(password, accountName, seed.ToString())
 	newAcc.KeyPairList = getExistingKeyPairs(seed, 10)
