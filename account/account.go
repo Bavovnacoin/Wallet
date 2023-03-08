@@ -23,19 +23,19 @@ type Account struct {
 }
 
 // Generates new account and set up a password to encode a private key
-func GenAccount(password string, accName string, seed string) Account {
+func GenAccount(password string, accName string, seed byteArr.ByteArr) Account {
 	ecdsa.InitValues()
 	var newAcc Account
 
 	newAcc.AccName = accName
 	newAcc.HashPass = hashing.SHA1(password)
 
-	seedEncrString := cryption.AES_encrypt(seed, password)
+	seedEncrString := cryption.AES_encrypt(seed.ToHexString(), password)
 	var seedEncr byteArr.ByteArr
 	seedEncr.SetFromHexString(seedEncrString, len(seedEncrString)/2)
 	newAcc.SeedEncr = seedEncr
 
-	newKeyPair := ecdsa.GenKeyPair(newAcc.SeedEncr, 0)
+	newKeyPair := ecdsa.GenKeyPair(seed, 0)
 	newKeyPair.PrivKey = cryption.AES_encrypt(newKeyPair.PrivKey, password)
 	newAcc.KeyPairList = append(newAcc.KeyPairList, newKeyPair)
 
@@ -47,7 +47,12 @@ func GenAccount(password string, accName string, seed string) Account {
 func AddKeyPairToAccount(password string, allowWrite bool) string {
 	if CurrAccount.HashPass == hashing.SHA1(password) {
 		ecdsa.InitValues()
-		newKeyPair := ecdsa.GenKeyPair(CurrAccount.SeedEncr, len(CurrAccount.KeyPairList))
+
+		seedStrDecr := cryption.AES_decrypt(CurrAccount.SeedEncr.ToHexString(), password)
+		var seedDecr byteArr.ByteArr
+		seedDecr.SetFromHexString(seedStrDecr, len(seedStrDecr)/2)
+
+		newKeyPair := ecdsa.GenKeyPair(seedDecr, len(CurrAccount.KeyPairList))
 		newKeyPair.PrivKey = cryption.AES_encrypt(newKeyPair.PrivKey, password)
 		CurrAccount.KeyPairList = append(CurrAccount.KeyPairList, newKeyPair)
 		Wallet[CurrAccount.ArrId] = CurrAccount

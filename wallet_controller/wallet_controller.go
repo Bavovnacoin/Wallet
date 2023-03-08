@@ -19,6 +19,7 @@ type WalletController struct {
 }
 
 var allowLaunchMenu bool = false
+var isMnemonicEntered bool = false
 
 func (wc *WalletController) ClearConsole() {
 	if wc.opSys == "windows" {
@@ -54,10 +55,11 @@ func (wc *WalletController) WalletNotExistKeyHandler() {
 		input := wc.scann.Text()
 
 		if input == "0" {
-			allowLaunchMenu = wc.CreateAccount()
+			wc.CreateAccount()
 			return
 		} else if input == "1" {
-			allowLaunchMenu = wc.EnterMnemonic()
+			wc.EnterMnemonic()
+			isMnemonicEntered = true
 			return
 		}
 	}
@@ -69,7 +71,8 @@ func (wc *WalletController) Launch() {
 	wc.scann = bufio.NewScanner(os.Stdin)
 
 	for wc.walletLaunched {
-		if !account.IsWalletExists() {
+		isAccExists := account.IsWalletExists()
+		if !isAccExists {
 			wc.WalletNotExistKeyHandler()
 		} else {
 			allowLaunchMenu = wc.initAccount()

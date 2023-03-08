@@ -103,8 +103,9 @@ func (wc *WalletController) CreateAccount() bool {
 	println()
 	println(strings.Join(phrase, " "))
 
-	seedString := byteArrToString(mn.GenSeed(phrase, accountPass))
-	account.Wallet = append(account.Wallet, account.GenAccount(accountName, accountPass, seedString))
+	seed := byteArr.ByteArr{ByteArr: mn.GenSeed(phrase, "")}
+	account.Wallet = append(account.Wallet, account.GenAccount(accountPass, accountName, seed))
+	account.CurrAccount = account.Wallet[len(account.Wallet)-1]
 	account.WriteAccounts()
 	println("Account successfully created.")
 	println("To continue enter any word.")
@@ -176,7 +177,7 @@ func (wc *WalletController) initAccount() bool {
 
 func isMnemPhraseValid(phrase string) bool {
 	phraseArr := strings.Split(phrase, " ")
-	if len(phraseArr) != 24 {
+	if len(phraseArr) == 0 {
 		return false
 	}
 	return true
@@ -199,7 +200,6 @@ func checkExistingKeyPairs(kps []ecdsa.KeyPair) int {
 	for true {
 		mid = (r + l) / 2
 		checkRes := con.IsAddrExist(hashing.SHA1(kps[mid].PublKey))
-
 		if checkRes && l >= r {
 			return mid
 		} else if !checkRes && l >= r {
@@ -218,8 +218,8 @@ func checkExistingKeyPairs(kps []ecdsa.KeyPair) int {
 // Checking an existing keys in the network
 func getExistingKeyPairs(seed byteArr.ByteArr, keysCheckAmmount int) []ecdsa.KeyPair {
 	var existingKeys []ecdsa.KeyPair
-	kpInd := 0
 
+	kpInd := 0
 	for true {
 		var currKPs []ecdsa.KeyPair
 		for ; kpInd < keysCheckAmmount; kpInd += 1 {
@@ -232,7 +232,7 @@ func getExistingKeyPairs(seed byteArr.ByteArr, keysCheckAmmount int) []ecdsa.Key
 		} else if currKPsInd == len(currKPs)-1 {
 			existingKeys = append(existingKeys, currKPs...)
 		} else {
-			existingKeys = append(existingKeys, currKPs[:currKPsInd]...)
+			existingKeys = append(existingKeys, currKPs[:currKPsInd+1]...)
 			break
 		}
 	}
@@ -241,7 +241,7 @@ func getExistingKeyPairs(seed byteArr.ByteArr, keysCheckAmmount int) []ecdsa.Key
 
 func (wc *WalletController) EnterMnemonic() bool {
 	wc.ClearConsole()
-	phraseArr := strings.Split(wc.fieldEnterer("Enter a mnemonic phrase", "Mnemonic phrase must be 24 words long.", isMnemPhraseValid), " ")
+	phraseArr := strings.Split(wc.fieldEnterer("Enter a mnemonic phrase", "Mnemonic phrase must contain words.", isMnemPhraseValid), " ")
 	if allowExit {
 		allowExit = false
 		return false
@@ -261,14 +261,15 @@ func (wc *WalletController) EnterMnemonic() bool {
 		return false
 	}
 
-	println(fmt.Sprint(phraseArr))
-	println(accountName)
-	println(password)
+	println("Restoring your keys. Please, wait for a while...")
 
 	var mnem mnemonic.Mnemonic
-	seed := byteArr.ByteArr{ByteArr: mnem.GenSeed(phraseArr, password)}
-	println(seed.ToString())
-	newAcc := account.GenAccount(password, accountName, seed.ToString())
-	newAcc.KeyPairList = getExistingKeyPairs(seed, 10)
+	seed := byteArr.ByteArr{ByteArr: mnem.GenSeed(phraseArr, "")}
+	newAcc := account.GenAccount(password, accountName, seed)
+
+	newAcc.KeyPairList = getExistingKeyPairs(seed, 5)
+	account.Wallet = append(account.Wallet, newAcc)
+	account.CurrAccount = account.Wallet[len(account.Wallet)-1]
+	account.WriteAccounts()
 	return true
 }
