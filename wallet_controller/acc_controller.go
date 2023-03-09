@@ -3,6 +3,7 @@ package wallet_controller
 import (
 	"bvcwallet/account"
 	"bvcwallet/byteArr"
+	"bvcwallet/cryption"
 	"bvcwallet/ecdsa"
 	"bvcwallet/hashing"
 	"bvcwallet/mnemonic"
@@ -227,14 +228,16 @@ func checkExistingKeyPairs(kps []ecdsa.KeyPair) int {
 }
 
 // Checking an existing keys in the network
-func getExistingKeyPairs(seed byteArr.ByteArr, keysCheckAmmount int) []ecdsa.KeyPair {
+func getExistingKeyPairs(seed byteArr.ByteArr, keysCheckAmmount int, password string) []ecdsa.KeyPair {
 	var existingKeys []ecdsa.KeyPair
 
 	kpInd := 0
 	for true {
 		var currKPs []ecdsa.KeyPair
 		for ; kpInd < keysCheckAmmount; kpInd += 1 {
-			currKPs = append(currKPs, ecdsa.GenKeyPair(seed, kpInd))
+			newKp := ecdsa.GenKeyPair(seed, kpInd)
+			newKp.PrivKey = cryption.AES_encrypt(newKp.PrivKey, password)
+			currKPs = append(currKPs, newKp)
 		}
 
 		currKPsInd := checkExistingKeyPairs(currKPs)
@@ -278,7 +281,7 @@ func (wc *WalletController) EnterMnemonic() bool {
 	seed := byteArr.ByteArr{ByteArr: mnem.GenSeed(phraseArr, "")}
 	newAcc := account.GenAccount(password, accountName, seed)
 
-	newAcc.KeyPairList = getExistingKeyPairs(seed, 5)
+	newAcc.KeyPairList = getExistingKeyPairs(seed, 5, password)
 	account.Wallet = append(account.Wallet, newAcc)
 	account.CurrAccount = account.Wallet[len(account.Wallet)-1]
 	account.WriteAccounts()
