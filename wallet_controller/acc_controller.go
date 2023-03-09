@@ -190,33 +190,39 @@ func isMnemPhraseValid(phrase string) bool {
 
 // Binary search for checking existing keys
 func checkExistingKeyPairs(kps []ecdsa.KeyPair) int {
-	l := 0
-	r := len(kps) - 1
-	mid := 0
-
 	var con networking.Connection
 	con.Establish()
 	defer con.Close()
 
-	if con.IsAddrExist(hashing.SHA1(kps[r].PublKey)) {
-		return r
-	}
-
-	for true {
-		mid = (r + l) / 2
-		checkRes := con.IsAddrExist(hashing.SHA1(kps[mid].PublKey))
-		if checkRes && l >= r {
-			return mid
-		} else if !checkRes && l >= r {
-			return mid - 1
-		}
-
-		if checkRes {
-			l = mid + 1
-		} else if !checkRes {
-			r = mid - 1
+	for i := len(kps) - 1; true; i-- {
+		if con.IsAddrExist(hashing.SHA1(kps[i].PublKey)) {
+			return i
 		}
 	}
+	return -1
+	// Binary search
+	// l := 0
+	// r := len(kps) - 1
+	// mid := 0
+	// if con.IsAddrExist(hashing.SHA1(kps[r].PublKey)) {
+	// 	return r
+	// }
+
+	// for true {
+	// 	mid = (r + l) / 2
+	// 	checkRes := con.IsAddrExist(hashing.SHA1(kps[mid].PublKey))
+	// 	if checkRes && l >= r {
+	// 		return mid
+	// 	} else if !checkRes && l >= r {
+	// 		return mid - 1
+	// 	}
+
+	// 	if checkRes {
+	// 		l = mid + 1
+	// 	} else if !checkRes {
+	// 		r = mid - 1
+	// 	}
+	// }
 	return -1
 }
 

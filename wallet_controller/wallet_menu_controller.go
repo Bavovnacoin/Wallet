@@ -152,6 +152,7 @@ func (wc *WalletController) createTransaction() (transaction.Transaction, bool) 
 				break
 			}
 			isTxCorrect = transaction.VerifyTransaction(tx)
+
 			if isTxCorrect {
 				account.WriteAccounts()
 				return tx, true
