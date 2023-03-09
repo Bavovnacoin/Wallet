@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
-	"log"
 	"net/rpc"
 )
 
@@ -27,16 +26,6 @@ func (c *Connection) Establish() bool {
 
 func (c *Connection) Close() {
 	c.client.Close()
-}
-
-func (c *Connection) PingPong() {
-	var reply Reply
-	err := c.client.Call("Listener.PingPong", []byte("ping"), &reply)
-	if err != nil {
-		log.Println(err)
-	} else {
-		log.Printf("Reply: %v, Data: %v", reply, string(reply.Data))
-	}
 }
 
 func (c *Connection) ToByteArr(data any) ([]byte, bool) {
