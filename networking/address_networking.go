@@ -5,14 +5,7 @@ import (
 	"log"
 )
 
-func (c *Connection) IsAddrExist(address string) bool {
-	var addr byteArr.ByteArr
-	isConv := addr.SetFromHexString(address, 20)
-
-	if !isConv {
-		return false
-	}
-
+func (c *Connection) IsAddrExist(addr byteArr.ByteArr) bool {
 	var repl Reply
 	err := c.client.Call("Listener.IsAddrExist", addr.ByteArr, &repl)
 	if err != nil {

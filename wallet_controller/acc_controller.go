@@ -196,7 +196,9 @@ func checkExistingKeyPairs(kps []ecdsa.KeyPair) int {
 	defer con.Close()
 
 	for i := len(kps) - 1; true; i-- {
-		if con.IsAddrExist(hashing.SHA1(kps[i].PublKey)) {
+		var addr byteArr.ByteArr
+		addr.SetFromHexString(hashing.SHA1(kps[i].PublKey), 20)
+		if con.IsAddrExist(addr) {
 			return i
 		}
 	}
