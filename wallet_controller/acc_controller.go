@@ -256,13 +256,14 @@ func (wc *WalletController) EnterMnemonic() bool {
 		return false
 	}
 
-	println("Restoring your keys. Please, wait for a while...")
+	mnemPhraseByte := byteArr.ByteArr{ByteArr: []byte(strings.Join(phraseArr, " "))}
+	newAcc := account.GenAccount(password, accountName, mnemPhraseByte)
 
 	var mnem mnemonic.Mnemonic
-	seed := byteArr.ByteArr{ByteArr: mnem.GenSeed(phraseArr, "")}
-	newAcc := account.GenAccount(password, accountName, seed)
+	seed := mnem.GenSeed(phraseArr, "")
 
-	newAcc.KeyPairList = getExistingKeyPairs(seed, 5, password)
+	println("Restoring your keys. Please, wait for a while...")
+	newAcc.KeyPairList = getExistingKeyPairs(byteArr.ByteArr{ByteArr: seed}, 5, password)
 	account.Wallet = append(account.Wallet, newAcc)
 	account.CurrAccount = account.Wallet[len(account.Wallet)-1]
 	account.WriteAccounts()

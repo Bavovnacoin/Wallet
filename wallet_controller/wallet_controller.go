@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bvcwallet/account"
 	"bvcwallet/networking"
-	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
@@ -31,7 +30,9 @@ func (wc *WalletController) ClearConsole() {
 		cmd.Stdout = os.Stdout
 		cmd.Run()
 	} else {
-		fmt.Println("\n\n")
+		for i := 0; i < 3; i++ {
+			println()
+		}
 	}
 }
 

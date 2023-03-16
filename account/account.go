@@ -5,6 +5,8 @@ import (
 	"bvcwallet/cryption"
 	"bvcwallet/ecdsa"
 	"bvcwallet/hashing"
+	"bvcwallet/mnemonic"
+	"strings"
 
 	"fmt"
 	"sort"
@@ -13,29 +15,33 @@ import (
 var CurrAccount Account
 
 type Account struct {
-	Id          int
-	AccName     string
-	HashPass    string          // TODO: byte arr
-	SeedEncr    byteArr.ByteArr // TODO: Check if correct, because it stores it really weirdly
-	KeyPairList []ecdsa.KeyPair
-	ArrId       int    `json:"-"`
-	Balance     uint64 `json:"-"`
+	Id           int
+	AccName      string
+	HashPass     string          // TODO: byte arr
+	MnemonicEncr byteArr.ByteArr // TODO: Check if correct, because it stores it really weirdly
+	KeyPairList  []ecdsa.KeyPair
+	ArrId        int    `json:"-"`
+	Balance      uint64 `json:"-"`
 }
 
 // Generates new account and set up a password to encode a private key
-func GenAccount(password string, accName string, seed byteArr.ByteArr) Account {
+func GenAccount(password string, accName string, mnemPhrase byteArr.ByteArr) Account {
 	ecdsa.InitValues()
 	var newAcc Account
 
 	newAcc.AccName = accName
 	newAcc.HashPass = hashing.SHA1(password)
 
-	seedEncrString := cryption.AES_encrypt(seed.ToHexString(), password)
-	var seedEncr byteArr.ByteArr
-	seedEncr.SetFromHexString(seedEncrString, len(seedEncrString)/2)
-	newAcc.SeedEncr = seedEncr
+	mnemEncrString := cryption.AES_encrypt(mnemPhrase.ToHexString(), password)
+	var mnemEncr byteArr.ByteArr
+	mnemEncr.SetFromHexString(mnemEncrString, len(mnemEncrString)/2)
+	newAcc.MnemonicEncr = mnemEncr
 
-	newKeyPair := ecdsa.GenKeyPair(seed, 0)
+	var mn mnemonic.Mnemonic
+	mnemString := string(mnemPhrase.ByteArr)
+	seed := mn.GenSeed(strings.Split(mnemString, " "), "")
+
+	newKeyPair := ecdsa.GenKeyPair(byteArr.ByteArr{ByteArr: seed}, 0)
 	newKeyPair.PrivKey = cryption.AES_encrypt(newKeyPair.PrivKey, password)
 	newAcc.KeyPairList = append(newAcc.KeyPairList, newKeyPair)
 
@@ -48,11 +54,14 @@ func AddKeyPairToAccount(password string, allowWrite bool) string {
 	if CurrAccount.HashPass == hashing.SHA1(password) {
 		ecdsa.InitValues()
 
-		seedStrDecr := cryption.AES_decrypt(CurrAccount.SeedEncr.ToHexString(), password)
-		var seedDecr byteArr.ByteArr
-		seedDecr.SetFromHexString(seedStrDecr, len(seedStrDecr)/2)
+		mnemStrDecr := cryption.AES_decrypt(CurrAccount.MnemonicEncr.ToHexString(), password)
+		var mnemDecr byteArr.ByteArr
+		mnemDecr.SetFromHexString(mnemStrDecr, len(mnemStrDecr)/2)
 
-		newKeyPair := ecdsa.GenKeyPair(seedDecr, len(CurrAccount.KeyPairList))
+		var mn mnemonic.Mnemonic
+		seed := mn.GenSeed(strings.Split(string(mnemDecr.ByteArr), " "), "")
+
+		newKeyPair := ecdsa.GenKeyPair(byteArr.ByteArr{ByteArr: seed}, len(CurrAccount.KeyPairList))
 		newKeyPair.PrivKey = cryption.AES_encrypt(newKeyPair.PrivKey, password)
 		CurrAccount.KeyPairList = append(CurrAccount.KeyPairList, newKeyPair)
 		Wallet[CurrAccount.ArrId] = CurrAccount
