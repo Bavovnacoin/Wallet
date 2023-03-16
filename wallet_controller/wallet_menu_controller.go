@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bvcwallet/account"
 	"bvcwallet/byteArr"
+	"bvcwallet/cryption"
 	"bvcwallet/hashing"
 	"bvcwallet/networking"
 	"bvcwallet/transaction"
@@ -215,6 +216,39 @@ func (wc *WalletController) ShowMyAddresses() {
 	}
 }
 
+func (wc *WalletController) ShowMnemonicPhrase() {
+	var password string
+	reader := bufio.NewReader(os.Stdin)
+	for true {
+		wc.ClearConsole()
+		println("Type \"back\" to back to the main menu.")
+		println("Enter your password to confirm the showing.")
+
+		password, _ = reader.ReadString('\n')
+		password = strings.Trim(password, wc.getLineSeparator())
+		if password == "back" {
+			return
+		}
+
+		if hashing.SHA1(password) != account.CurrAccount.HashPass {
+			println("Password is incorrect. Try again")
+		} else {
+			break
+		}
+	}
+
+	mnemStrDecr := cryption.AES_decrypt(account.CurrAccount.MnemonicEncr.ToHexString(), password)
+	var mnemDecr byteArr.ByteArr
+	mnemDecr.SetFromHexString(mnemStrDecr, len(mnemStrDecr)/2)
+
+	wc.ClearConsole()
+	println("Your mnemonic phrase:")
+	println(string(mnemDecr.ByteArr))
+
+	println("\nType anything to back")
+	reader.ReadString('\n')
+}
+
 // TODO: add view addresses??
 func (wc *WalletController) handleInput(input string) {
 	if input == "0" { // Update balance
@@ -245,7 +279,9 @@ func (wc *WalletController) handleInput(input string) {
 		wc.ShowMyAddresses()
 	} else if input == "4" { // Choose other account
 		menuLaunched = false
-	} else if input == "5" { // Exit
+	} else if input == "5" { // Show mnemonic phrase
+		wc.ShowMnemonicPhrase()
+	} else if input == "6" { // Exit
 		wc.ClearConsole()
 		println("Thank you for using our wallet. See you!")
 		wc.walletLaunched = false
@@ -269,7 +305,8 @@ func (wc *WalletController) GetMenu() {
 		println("2. Create new address")
 		println("3. Show my addresses")
 		println("4. Choose the other account")
-		println("5. Exit")
+		println("5. Show mnemonic phrase")
+		println("6. Exit")
 
 		println("Type in a number, to select a function.")
 		if wrongInput {
