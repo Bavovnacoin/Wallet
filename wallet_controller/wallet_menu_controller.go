@@ -75,10 +75,14 @@ func (wc *WalletController) createTransaction() (transaction.Transaction, bool) 
 			}
 
 			var inpAddr byteArr.ByteArr
-			isInpCorrect := inpAddr.SetFromHexString(inputArr[0], 20)
-			if !isInpCorrect || len(inputArr[0]) != 40 {
+			if len(inputArr[0]) != 40 {
 				println("You have typed wrong address")
 			} else if len(inputArr) == 2 && len(inputArr[0]) == 40 {
+				isInpCorrect := inpAddr.SetFromHexString(inputArr[0], 20)
+				if !isInpCorrect {
+					println("You have typed wrong address")
+					continue
+				}
 				value, err := strconv.ParseUint(inputArr[1], 10, 64)
 				if err == nil {
 					outValue = append(outValue, value)

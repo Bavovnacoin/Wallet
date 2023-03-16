@@ -45,49 +45,26 @@ func (wc *WalletController) getLineSeparator() string {
 	}
 }
 
-func (wc *WalletController) WalletNotExistKeyHandler() {
-	for true {
-		wc.ClearConsole()
-		println("Can't find any account on you'r PC")
-		println("0. Create a new one")
-		println("1. Enter a mnemonic phrase")
-		wc.scann.Scan()
-		input := wc.scann.Text()
-
-		if input == "0" {
-			wc.CreateAccount()
-			return
-		} else if input == "1" {
-			wc.EnterMnemonic()
-			isMnemonicEntered = true
-			return
-		}
-	}
-}
-
 func (wc *WalletController) Launch() {
 	wc.walletLaunched = true
 	wc.opSys = runtime.GOOS
 	wc.scann = bufio.NewScanner(os.Stdin)
 
 	for wc.walletLaunched {
-		isAccExists := account.IsWalletExists()
-		if !isAccExists {
-			wc.WalletNotExistKeyHandler()
+		account.IsWalletExists()
+
+		allowLaunchMenu = wc.initAccount()
+
+		var connection networking.Connection
+		isEstablished := connection.Establish()
+
+		if isEstablished {
+			connection.GetMyUtxo(account.GetAccAddresses())
+			account.GetBalance()
+			connection.Close()
 		} else {
-			allowLaunchMenu = wc.initAccount()
-
-			var connection networking.Connection
-			isEstablished := connection.Establish()
-
-			if isEstablished {
-				connection.GetMyUtxo(account.GetAccAddresses())
-				account.GetBalance()
-				connection.Close()
-			} else {
-				println("Can't connect to any Bavovnacoin node. Please, try again later")
-				return
-			}
+			println("Can't connect to any Bavovnacoin node. Please, try again later")
+			return
 		}
 
 		if allowLaunchMenu {

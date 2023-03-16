@@ -154,7 +154,8 @@ func (wc *WalletController) initAccount() bool {
 		for i := 0; i < len(account.Wallet); i++ {
 			fmt.Printf("%d. %s\n", i, account.Wallet[i].AccName)
 		}
-		fmt.Printf("%d. Add via a mnemonic phrase\n", len(account.Wallet))
+		fmt.Printf("%d. Create a new one\n", len(account.Wallet))
+		fmt.Printf("%d. Add via a mnemonic phrase\n", len(account.Wallet)+1)
 
 		var command string
 		wc.scann.Scan()
@@ -164,10 +165,12 @@ func (wc *WalletController) initAccount() bool {
 		if command == "exit" {
 			wc.walletLaunched = false
 			return false
-		} else if err != nil || accIdNum < 0 || accIdNum > len(account.Wallet) {
+		} else if err != nil || accIdNum < 0 || accIdNum > len(account.Wallet)+1 {
 			printErr = true
-		} else {
+		} else if err != nil || accIdNum < 0 || accIdNum <= len(account.Wallet)+1 {
 			if accIdNum == len(account.Wallet) {
+				wc.CreateAccount()
+			} else if accIdNum == len(account.Wallet)+1 {
 				wc.EnterMnemonic()
 			} else {
 				validResult := wc.validateUser(accIdNum)
