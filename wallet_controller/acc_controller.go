@@ -198,37 +198,13 @@ func checkExistingKeyPairs(kps []ecdsa.KeyPair) int {
 	con.Establish()
 	defer con.Close()
 
-	for i := len(kps) - 1; true; i-- {
+	for i := len(kps) - 1; i >= 0; i-- {
 		var addr byteArr.ByteArr
 		addr.SetFromHexString(hashing.SHA1(kps[i].PublKey), 20)
 		if con.IsAddrExist(addr) {
 			return i
 		}
 	}
-	return -1
-	// Binary search
-	// l := 0
-	// r := len(kps) - 1
-	// mid := 0
-	// if con.IsAddrExist(hashing.SHA1(kps[r].PublKey)) {
-	// 	return r
-	// }
-
-	// for true {
-	// 	mid = (r + l) / 2
-	// 	checkRes := con.IsAddrExist(hashing.SHA1(kps[mid].PublKey))
-	// 	if checkRes && l >= r {
-	// 		return mid
-	// 	} else if !checkRes && l >= r {
-	// 		return mid - 1
-	// 	}
-
-	// 	if checkRes {
-	// 		l = mid + 1
-	// 	} else if !checkRes {
-	// 		r = mid - 1
-	// 	}
-	// }
 	return -1
 }
 
