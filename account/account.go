@@ -15,7 +15,6 @@ import (
 var CurrAccount Account
 
 type Account struct {
-	Id           int
 	AccName      string
 	HashPass     string          // TODO: byte arr
 	MnemonicEncr byteArr.ByteArr // TODO: Check if correct, because it stores it really weirdly
@@ -45,8 +44,6 @@ func GenAccount(password string, accName string, mnemPhrase byteArr.ByteArr) Acc
 	newKeyPair.PrivKey = cryption.AES_encrypt(newKeyPair.PrivKey, password)
 	newAcc.KeyPairList = append(newAcc.KeyPairList, newKeyPair)
 
-	newAcc.Id = RightBoundAccNum + 1
-	RightBoundAccNum++
 	return newAcc
 }
 

@@ -21,7 +21,6 @@ const (
 	WalletName = "wallet.json"
 )
 
-var RightBoundAccNum int // Accout index of the right bound
 var Wallet []Account
 
 func IsWalletExists() bool {
