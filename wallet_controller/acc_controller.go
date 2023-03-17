@@ -20,28 +20,37 @@ const (
 
 var allowExit bool = false
 
-func isAccNameValid(name string) bool {
-	if len(name) < 4 || len(name) > 25 {
-		return false
+func isAccNameValid(name string) string {
+	for i := 0; i < len(account.Wallet); i++ {
+		if account.Wallet[i].AccName == name {
+			return "You already have an account with such a name."
+		}
 	}
-	return true
+
+	if len(name) < 4 || len(name) > 25 {
+		return "Account length should be in range from 4 to 25."
+	}
+	return ""
 }
 
-func isAccPassValid(pass string) bool {
+func isAccPassValid(pass string) string {
 	// Regex for checking at least one lower, one upper, one num and spec sign
 	reg := fmt.Sprintf("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[%s])[A-Za-z\\d%s]$", specSign, specSign)
 	isPassMatch, _ := regexp.MatchString(reg, pass)
 	if (len(pass) < 8 || len(pass) > 20) && !isPassMatch {
-		return false
+		return fmt.Sprintf("Account password length must be in range from 8 to 20 symbols. It should contain upper and lower case letters, numbers and special signs (%s).\n", specSign)
 	}
-	return true
+	return ""
 }
 
-func (wc *WalletController) fieldEnterer(enterText string, errorText string, validation func(val string) bool) string {
+func (wc *WalletController) fieldEnterer(enterText string, validation func(val string) string) string {
 	println("Type \"back\" to back to the menu.")
 	println(enterText)
+
 	enterValue := ""
 	validErrText := ""
+	errText := ""
+
 	for true {
 		if validErrText != "" {
 			println(validErrText)
@@ -56,10 +65,11 @@ func (wc *WalletController) fieldEnterer(enterText string, errorText string, val
 			return ""
 		}
 
-		if validation(enterValue) {
+		errText = validation(enterValue)
+		if errText == "" {
 			break
 		} else {
-			validErrText = errorText
+			validErrText = errText
 		}
 	}
 	return enterValue
@@ -73,22 +83,47 @@ func byteArrToString(arr []byte) string {
 	return res
 }
 
+func IsMnemPhrLangIndValid(langInd string) string {
+	ind, isConv := strconv.Atoi(langInd)
+	if isConv == nil {
+		if ind >= 0 && ind < len(mnemonic.Langs) {
+			return ""
+		}
+	}
+	return "There's no such an option"
+}
+
+func GenMnemonicLangTitle() string {
+	title := "Choose a mnemonic phrase language and press the right button (you can't change it further)\n"
+	for i, lang := range mnemonic.Langs {
+		title += fmt.Sprintf("%d. %s\n", i, lang)
+	}
+	return title
+}
+
 func (wc *WalletController) CreateAccount() bool {
 	wc.ClearConsole()
-	accountName := wc.fieldEnterer("Enter an account name", "Account name length must be in range from 4 to 25 symbols.", isAccNameValid)
+	accountName := wc.fieldEnterer("Enter an account name", isAccNameValid)
 	if allowExit {
 		allowExit = false
 		return false
 	}
 
 	wc.ClearConsole()
-	accountPass := wc.fieldEnterer("Enter an account password", fmt.Sprintf("Account password length must be in range from 8 to 20 symbols. It should contain upper and lower case letters, numbers and special signs (%s).\n", specSign), isAccPassValid)
+	accountPass := wc.fieldEnterer("Enter an account password", isAccPassValid)
 	if allowExit {
 		return false
 	}
 
 	var mn mnemonic.Mnemonic
-	mn.InitMnemonic("en")
+	wc.ClearConsole()
+	mempLang := wc.fieldEnterer(GenMnemonicLangTitle(), IsMnemPhrLangIndValid)
+	if allowExit {
+		return false
+	}
+
+	ind, _ := strconv.Atoi(mempLang)
+	mn.InitMnemonic(mnemonic.Langs[ind])
 	phrase := mn.GenMnemonicPhrase()
 
 	command := ""
@@ -110,7 +145,13 @@ func (wc *WalletController) CreateAccount() bool {
 	account.WriteAccounts()
 	println("Account successfully created.")
 	println("To continue enter any word.")
-	fmt.Scan(&command)
+
+	command = ""
+	for command == "" {
+		wc.scann.Scan()
+		command = wc.scann.Text()
+	}
+
 	return true
 }
 
@@ -184,12 +225,12 @@ func (wc *WalletController) initAccount() bool {
 	return false
 }
 
-func isMnemPhraseValid(phrase string) bool {
+func isMnemPhraseValid(phrase string) string {
 	phraseArr := strings.Split(phrase, " ")
 	if len(phraseArr) == 0 {
-		return false
+		return "Mnemonic phrase must contain words."
 	}
-	return true
+	return ""
 }
 
 // Binary search for checking existing keys
@@ -236,21 +277,21 @@ func getExistingKeyPairs(seed byteArr.ByteArr, keysCheckAmmount int, password st
 
 func (wc *WalletController) EnterMnemonic() bool {
 	wc.ClearConsole()
-	phraseArr := strings.Split(wc.fieldEnterer("Enter a mnemonic phrase", "Mnemonic phrase must contain words.", isMnemPhraseValid), " ")
+	phraseArr := strings.Split(wc.fieldEnterer("Enter a mnemonic phrase", isMnemPhraseValid), " ")
 	if allowExit {
 		allowExit = false
 		return false
 	}
 
 	println()
-	accountName := wc.fieldEnterer("Enter a new account name", "Account name length must be in range from 4 to 25 symbols.", isAccNameValid)
+	accountName := wc.fieldEnterer("Enter a new account name", isAccNameValid)
 	if allowExit {
 		allowExit = false
 		return false
 	}
 
 	println()
-	password := wc.fieldEnterer("Please, enter a new password.", "Error: password type is not correct.", isAccPassValid)
+	password := wc.fieldEnterer("Please, enter a new password.", isAccPassValid)
 	if allowExit {
 		allowExit = false
 		return false
@@ -259,8 +300,8 @@ func (wc *WalletController) EnterMnemonic() bool {
 	mnemPhraseByte := byteArr.ByteArr{ByteArr: []byte(strings.Join(phraseArr, " "))}
 	newAcc := account.GenAccount(password, accountName, mnemPhraseByte)
 
-	var mnem mnemonic.Mnemonic
-	seed := mnem.GenSeed(phraseArr, "")
+	var mn mnemonic.Mnemonic
+	seed := mn.GenSeed(phraseArr, "")
 
 	println("Restoring your keys. Please, wait for a while...")
 	newAcc.KeyPairList = getExistingKeyPairs(byteArr.ByteArr{ByteArr: seed}, 5, password)
