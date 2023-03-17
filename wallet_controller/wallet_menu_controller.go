@@ -283,7 +283,6 @@ func (wc *WalletController) handleInput(input string) {
 		wc.ShowMnemonicPhrase()
 	} else if input == "6" { // Exit
 		wc.ClearConsole()
-		println("Thank you for using our wallet. See you!")
 		wc.walletLaunched = false
 		menuLaunched = false
 	}

@@ -72,4 +72,6 @@ func (wc *WalletController) Launch() {
 			wc.GetMenu()
 		}
 	}
+	wc.ClearConsole()
+	println("Thank you for using our wallet. See you!")
 }
