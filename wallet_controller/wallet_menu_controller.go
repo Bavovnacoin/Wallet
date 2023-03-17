@@ -47,7 +47,7 @@ func (wc *WalletController) createNewAddress() {
 	}
 }
 
-func (wc *WalletController) createTransaction() (transaction.Transaction, bool) {
+func (wc *WalletController) createTransaction() (transaction.Transaction, string) {
 
 	reader := bufio.NewReader(os.Stdin)
 
@@ -72,7 +72,7 @@ func (wc *WalletController) createTransaction() (transaction.Transaction, bool) 
 				break
 			}
 			if text == "back" {
-				return tx, false
+				return tx, "back"
 			}
 
 			var inpAddr byteArr.ByteArr
@@ -103,7 +103,7 @@ func (wc *WalletController) createTransaction() (transaction.Transaction, bool) 
 			text, _ := reader.ReadString('\n')
 			text = strings.Trim(text, wc.getLineSeparator())
 			if text == "back" {
-				return tx, false
+				return tx, "back"
 			}
 
 			feeInp, err := strconv.ParseInt(text, 10, 64)
@@ -121,7 +121,7 @@ func (wc *WalletController) createTransaction() (transaction.Transaction, bool) 
 			text, _ := reader.ReadString('\n')
 			text = strings.Trim(text, wc.getLineSeparator())
 			if text == "back" {
-				return tx, false
+				return tx, "back"
 			}
 
 			locktimeInp, err := strconv.ParseUint(text, 10, 64)
@@ -139,7 +139,7 @@ func (wc *WalletController) createTransaction() (transaction.Transaction, bool) 
 			password, _ = reader.ReadString('\n')
 			password = strings.Trim(password, wc.getLineSeparator())
 			if password == "back" {
-				return tx, false
+				return tx, "back"
 			}
 
 			if hashing.SHA1(password) != account.CurrAccount.HashPass {
@@ -160,14 +160,14 @@ func (wc *WalletController) createTransaction() (transaction.Transaction, bool) 
 
 			if isTxCorrect {
 				account.WriteAccounts()
-				return tx, true
+				return tx, ""
 			} else { // Remove last keypair if tx is incorrect
 				kpLen := len(account.CurrAccount.KeyPairList)
 				account.CurrAccount.KeyPairList = append(account.CurrAccount.KeyPairList, account.CurrAccount.KeyPairList[:kpLen-1]...)
 			}
 		}
 	}
-	return tx, false
+	return tx, "err"
 }
 
 func SendTransaction(tx transaction.Transaction, isSent *bool) {
@@ -193,7 +193,7 @@ func UpdateBalance(res *bool) {
 	if isEstablished {
 		*res = connection.GetMyUtxo(account.GetAccAddresses())
 		account.GetBalance()
-		println("INFO: Balance updated. Press any button to refresh it.")
+		println("INFO: Balance updated. Type anything to refresh it.")
 		connection.Close()
 	}
 }
@@ -262,7 +262,7 @@ func (wc *WalletController) handleInput(input string) {
 	} else if input == "1" { // Create transaction
 		newTx, isCreated := wc.createTransaction()
 
-		if isCreated {
+		if isCreated == "" {
 			var isSent bool
 			go SendTransaction(newTx, &isSent)
 			if isSent {
@@ -270,7 +270,7 @@ func (wc *WalletController) handleInput(input string) {
 			} else {
 				wc.menuMessage = "An error occured when sending your transaction. Try again later"
 			}
-		} else {
+		} else if isCreated == "err" {
 			wc.menuMessage = "An error occured when creating your transaction. Try again later"
 		}
 	} else if input == "2" { // Create new address
