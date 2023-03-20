@@ -54,28 +54,7 @@ func InitValues() {
 }
 
 func inverse(a, m *big.Int) *big.Int {
-	prevY := big.NewInt(0)
-	y := big.NewInt(1)
-
-	if a.Cmp(big.NewInt(0)) == -1 {
-		a = big.NewInt(0).Mod(a, m)
-	}
-
-	bigOne := big.NewInt(1)
-	for a.Cmp(bigOne) == 1 {
-		q := big.NewInt(0).Div(m, a)
-
-		qmuly := big.NewInt(0).Mul(q, y)
-		tempY := y
-		y = big.NewInt(0).Sub(prevY, qmuly)
-		prevY = tempY
-
-		tempa := a
-		a = big.NewInt(0).Rem(m, a)
-		m = tempa
-	}
-
-	return y
+	return new(big.Int).ModInverse(a, m)
 }
 
 func double(point Point) Point {
