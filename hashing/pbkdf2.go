@@ -14,7 +14,7 @@ func intToByteArr(blockInd int) []byte {
 	return blockIndByteArr
 }
 
-func f(password string, salt string, iterCount int, blockInd int) []byte {
+func hmacRoundsFunc(password string, salt string, iterCount int, blockInd int) []byte {
 	mes := append([]byte(salt), intToByteArr(blockInd)...)
 	U := HMAC_SHA1([]byte(password), mes)
 	UbyteArr, _ := hex.DecodeString(U)
@@ -38,7 +38,7 @@ func PBKDF2(password string, salt string, iterCount int, keyLen int) []byte {
 	var T []byte
 
 	for i := 1; i <= blockCount; i++ {
-		T = append(T, f(password, salt, iterCount, i)...)
+		T = append(T, hmacRoundsFunc(password, salt, iterCount, i)...)
 	}
 
 	return T[:(blockCount-1)*result_size+r]
