@@ -12,7 +12,7 @@ import (
 
 const (
 	mnemLenBits = 256
-	iterC       = 256
+	iterC       = 512
 	seedLen     = 64
 )
 
