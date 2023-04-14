@@ -6,11 +6,6 @@ import (
 	"strings"
 )
 
-var functions []func()
-var arr []uint32
-var f uint32
-var k uint32
-
 func binary(s string) string {
 	res := ""
 	for _, c := range s {
@@ -33,29 +28,34 @@ func leftShift(val uint32, k int) uint32 {
 	return uint32((uint64(val) << k) % 4294967295)
 }
 
-func f1() {
-	f = (arr[1] & arr[2]) | ((^arr[1]) & arr[3])
-	k = 0x5A827999
+func f1(arr []uint32, f *uint32, k *uint32) {
+	*f = (arr[1] & arr[2]) | ((^arr[1]) & arr[3])
+	*k = 0x5A827999
 }
 
-func f2() {
-	f = arr[1] ^ arr[2] ^ arr[3]
-	k = 0x6ED9EBA1
+func f2(arr []uint32, f *uint32, k *uint32) {
+	*f = arr[1] ^ arr[2] ^ arr[3]
+	*k = 0x6ED9EBA1
 }
 
-func f3() {
-	f = (arr[1] & arr[2]) | (arr[1] & arr[3]) | (arr[2] & arr[3])
-	k = 0x8F1BBCDC
+func f3(arr []uint32, f *uint32, k *uint32) {
+	*f = (arr[1] & arr[2]) | (arr[1] & arr[3]) | (arr[2] & arr[3])
+	*k = 0x8F1BBCDC
 }
 
-func f4() {
-	f = arr[1] ^ arr[2] ^ arr[3]
-	k = 0xCA62C1D6
+func f4(arr []uint32, f *uint32, k *uint32) {
+	*f = arr[1] ^ arr[2] ^ arr[3]
+	*k = 0xCA62C1D6
 }
 
 func SHA1(message string) string {
+	var arr []uint32
+	var f uint32
+	var k uint32
+	var functions []func([]uint32, *uint32, *uint32)
 	var sha1_h = []uint32{0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0}
-	functions = []func(){f1, f2, f3, f4}
+
+	functions = []func([]uint32, *uint32, *uint32){f1, f2, f3, f4}
 	arr = make([]uint32, len(sha1_h))
 	f = 0
 	k = 0
@@ -80,7 +80,7 @@ func SHA1(message string) string {
 		f = 0
 		k = 0
 		for j := 0; j < 80; j += 1 {
-			functions[(j-(j/19))/19]()
+			functions[(j-(j/19))/19](arr, &f, &k)
 			temp := leftShift(arr[0], 5) + f + arr[4] + k + w[j]
 			arr[4] = arr[3]
 			arr[3] = arr[2]
