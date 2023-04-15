@@ -10,7 +10,6 @@ import (
 	"bvcwallet/transaction"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -45,129 +44,6 @@ func (wc *WalletController) createNewAddress() {
 			isInputIncorrect = true
 		}
 	}
-}
-
-func (wc *WalletController) createTransaction() (transaction.Transaction, string) {
-
-	reader := bufio.NewReader(os.Stdin)
-
-	var tx transaction.Transaction
-	incorrectAmmount := false
-	for true {
-		wc.ClearConsole()
-		if incorrectAmmount {
-			println("You do not have enought coins to make a transaction. Try again.")
-			incorrectAmmount = false
-		}
-		println("Transaction creation. To stop creation type \"back\"")
-		var outAddr []byteArr.ByteArr
-		var outValue []uint64
-		println("Type in address and value to be sent separated by a space. Or continue by typing next.")
-
-		for true {
-			text, _ := reader.ReadString('\n')
-			text = strings.Trim(text, wc.getLineSeparator())
-			inputArr := strings.Split(text, " ")
-			if text == "next" {
-				break
-			}
-			if text == "back" {
-				return tx, "back"
-			}
-
-			var inpAddr byteArr.ByteArr
-			if len(inputArr[0]) != 40 {
-				println("You have typed wrong address")
-			} else if len(inputArr) == 2 && len(inputArr[0]) == 40 {
-				isInpCorrect := inpAddr.SetFromHexString(inputArr[0], 20)
-				if !isInpCorrect {
-					println("You have typed wrong address")
-					continue
-				}
-				value, err := strconv.ParseUint(inputArr[1], 10, 64)
-				if err == nil {
-					outValue = append(outValue, value)
-					outAddr = append(outAddr, inpAddr)
-				} else {
-					println("You have typed wrong coins ammount")
-				}
-			} else {
-				println("You have typed wrong input")
-			}
-		}
-
-		// TODO: select min, high, middle
-		println("Type in tx fee per byte.")
-		var fee int
-		for true {
-			text, _ := reader.ReadString('\n')
-			text = strings.Trim(text, wc.getLineSeparator())
-			if text == "back" {
-				return tx, "back"
-			}
-
-			feeInp, err := strconv.ParseInt(text, 10, 64)
-			if err == nil {
-				fee = int(feeInp)
-				break
-			} else {
-				println("Error. Expected numerical value.")
-			}
-		}
-
-		println("Type in how many blocks your transaction will be freezed")
-		var locktime uint64
-		for true {
-			text, _ := reader.ReadString('\n')
-			text = strings.Trim(text, wc.getLineSeparator())
-			if text == "back" {
-				return tx, "back"
-			}
-
-			locktimeInp, err := strconv.ParseUint(text, 10, 64)
-			if err == nil {
-				locktime = locktimeInp
-				break
-			} else {
-				println("Error. Expected numerical value.")
-			}
-		}
-
-		println("Enter your password to confirm creation")
-		var password string
-		for true {
-			password, _ = reader.ReadString('\n')
-			password = strings.Trim(password, wc.getLineSeparator())
-			if password == "back" {
-				return tx, "back"
-			}
-
-			if hashing.SHA1(password) != account.CurrAccount.HashPass {
-				println("Password is incorrect. Try again")
-			} else {
-				break
-			}
-		}
-
-		var res bool
-		for isTxCorrect := false; !isTxCorrect; {
-			tx, res = transaction.CreateTransaction(password, outAddr, outValue, fee, uint(locktime))
-			if !res {
-				incorrectAmmount = true
-				break
-			}
-			isTxCorrect = transaction.VerifyTransaction(tx)
-
-			if isTxCorrect {
-				account.WriteAccounts()
-				return tx, ""
-			} else { // Remove last keypair if tx is incorrect
-				kpLen := len(account.CurrAccount.KeyPairList)
-				account.CurrAccount.KeyPairList = append(account.CurrAccount.KeyPairList, account.CurrAccount.KeyPairList[:kpLen-1]...)
-			}
-		}
-	}
-	return tx, "err"
 }
 
 func SendTransaction(tx transaction.Transaction, isSent *bool) {
@@ -249,7 +125,6 @@ func (wc *WalletController) ShowMnemonicPhrase() {
 	reader.ReadString('\n')
 }
 
-// TODO: add view addresses??
 func (wc *WalletController) handleInput(input string) {
 	if input == "0" { // Update balance
 		var res bool = true
@@ -273,15 +148,22 @@ func (wc *WalletController) handleInput(input string) {
 		} else if isCreated == "err" {
 			wc.menuMessage = "An error occured when creating your transaction. Try again later"
 		}
-	} else if input == "2" { // Create new address
+	} else if input == "2" { // Receive coins
+		_, isCreated := wc.createReceiveTransaction()
+		if isCreated == "" {
+			wc.menuMessage = "Your transaction is created. Now you can send it to the receiver."
+		} else if isCreated == "err" {
+			wc.menuMessage = "An error occured when creating your transaction. Try again later"
+		}
+	} else if input == "3" { // Create new address
 		wc.createNewAddress()
-	} else if input == "3" { // Show my addresses
+	} else if input == "4" { // Show my addresses
 		wc.ShowMyAddresses()
-	} else if input == "4" { // Choose other account
+	} else if input == "5" { // Choose other account
 		menuLaunched = false
-	} else if input == "5" { // Show mnemonic phrase
+	} else if input == "6" { // Show mnemonic phrase
 		wc.ShowMnemonicPhrase()
-	} else if input == "6" { // Exit
+	} else if input == "7" { // Exit
 		wc.ClearConsole()
 		wc.walletLaunched = false
 		menuLaunched = false
@@ -300,14 +182,18 @@ func (wc *WalletController) GetMenu() {
 
 		fmt.Printf("You balance: %0.8f BVC.\n", float64(account.CurrAccount.Balance)/float64(100000000))
 		println("0. Update balance")
-		println("1. Send coins")
-		println("2. Create new address")
-		println("3. Show my addresses")
-		println("4. Choose the other account")
-		println("5. Show mnemonic phrase")
-		println("6. Exit")
-
+		println("1. Send coins (TODO: sign tx)") // TODO: recieve tx and sign it
+		println("2. Receive coins")
+		println()
+		println("3. Create new address")
+		println("4. Show my addresses")
+		println()
+		println("5. Choose the other account")
+		println("6. Show mnemonic phrase")
+		println("7. Exit")
+		println()
 		println("Type in a number, to select a function.")
+
 		if wrongInput {
 			println("You have typed in wrong value.")
 			wrongInput = false
