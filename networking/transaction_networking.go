@@ -2,7 +2,6 @@ package networking
 
 import (
 	"bvcwallet/transaction"
-	"log"
 )
 
 func (c *Connection) SendTransaction(tx transaction.Transaction, isAccepted *bool) bool {
@@ -14,7 +13,6 @@ func (c *Connection) SendTransaction(tx transaction.Transaction, isAccepted *boo
 	var repl Reply
 	err := c.client.Call("Listener.AddNewTxToMemp", byteArr, &repl)
 	if err != nil {
-		log.Println(err)
 		return false
 	}
 
