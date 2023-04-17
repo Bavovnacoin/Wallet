@@ -314,10 +314,14 @@ func (wc *WalletController) signTransaction() (transaction.Transaction, string) 
 
 		var outAddr []byteArr.ByteArr
 		var outValue []uint64
+		println()
+		println("You are about to pay:")
 		for i := 0; i < len(recTx.Outputs); i++ {
 			outAddr = append(outAddr, recTx.Outputs[i].Address)
 			outValue = append(outValue, recTx.Outputs[i].Value)
+			fmt.Printf("%0.8f BVC on address %s\n", float64(outValue[i])/100000000, outAddr[i].ToHexString())
 		}
+		println()
 
 		// TODO: select min, high, middle
 		println("Type in tx fee per byte.")
