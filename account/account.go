@@ -19,7 +19,7 @@ type Account struct {
 	HashPass     string          // TODO: byte arr
 	MnemonicEncr byteArr.ByteArr // TODO: Check if correct, because it stores it really weirdly
 	KeyPairList  []ecdsa.KeyPair
-	ArrId        int    `json:"-"`
+	ArrId        int
 	Balance      uint64 `json:"-"`
 }
 
@@ -43,6 +43,12 @@ func GenAccount(password string, accName string, mnemPhrase byteArr.ByteArr) Acc
 	newKeyPair := ecdsa.GenKeyPair(byteArr.ByteArr{ByteArr: seed}, 0)
 	newKeyPair.PrivKey = cryption.AES_encrypt(newKeyPair.PrivKey, password)
 	newAcc.KeyPairList = append(newAcc.KeyPairList, newKeyPair)
+
+	if len(Wallet) == 0 {
+		newAcc.ArrId = 0
+	} else {
+		newAcc.ArrId = Wallet[len(Wallet)-1].ArrId + 1
+	}
 
 	return newAcc
 }

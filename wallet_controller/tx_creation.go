@@ -203,7 +203,7 @@ func (wc *WalletController) createReceiveTransaction() (transaction.Transaction,
 			if len(inputArr[0]) != 40 {
 				println("You have typed wrong address")
 			} else if len(inputArr) == 2 && len(inputArr[0]) == 40 {
-				if inpAddr.SetFromHexString(inputArr[0], 20) {
+				if !inpAddr.SetFromHexString(inputArr[0], 20) {
 					println("You have typed wrong address")
 					continue
 				} else if !isAddrInAccount(inpAddr) {

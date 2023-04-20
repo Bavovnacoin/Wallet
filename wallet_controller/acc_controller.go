@@ -139,8 +139,9 @@ func (wc *WalletController) CreateAccount() bool {
 	println()
 	println(strings.Join(phrase, " "))
 
-	seed := byteArr.ByteArr{ByteArr: mn.GenSeed(phrase, "")}
-	account.Wallet = append(account.Wallet, account.GenAccount(accountPass, accountName, seed))
+	//seed := byteArr.ByteArr{ByteArr: mn.GenSeed(phrase, "")}
+	mnemPhraseByte := byteArr.ByteArr{ByteArr: []byte(strings.Join(phrase, " "))}
+	account.Wallet = append(account.Wallet, account.GenAccount(accountPass, accountName, mnemPhraseByte))
 	account.CurrAccount = account.Wallet[len(account.Wallet)-1]
 	account.WriteAccounts()
 	println("Account successfully created.")
