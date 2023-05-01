@@ -17,7 +17,7 @@ type Reply struct {
 
 func (c *Connection) Establish() bool {
 	var err error
-	c.client, err = rpc.Dial("tcp", "localhost:12345")
+	c.client, err = rpc.Dial("tcp", "localhost:25565")
 	if err != nil {
 		return false
 	}
